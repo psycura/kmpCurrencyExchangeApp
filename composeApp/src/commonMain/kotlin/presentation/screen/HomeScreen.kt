@@ -18,6 +18,8 @@ class HomeScreen : Screen {
 
         val vm = koinScreenModel<HomeVM>()
         val rateStatus by vm.rateStatus
+        val source by vm.sourceCurrency
+        val target by vm.targetCurrency
 
         Column(
             modifier = Modifier
@@ -26,9 +28,12 @@ class HomeScreen : Screen {
         ) {
             HomeHeader(
                 status = rateStatus,
+                source = source,
+                target = target,
                 onRatesRefresh = {
                     vm.sendEvent(HomeUiEvent.RefreshRates)
-                }
+                },
+                onSwitchClick = {}
             )
         }
     }
