@@ -5,6 +5,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
@@ -21,6 +24,8 @@ class HomeScreen : Screen {
         val source by vm.sourceCurrency
         val target by vm.targetCurrency
 
+        var amount by rememberSaveable { mutableStateOf(0.0) }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -30,6 +35,8 @@ class HomeScreen : Screen {
                 status = rateStatus,
                 source = source,
                 target = target,
+                amount = amount,
+                onAmountChange = { amount = it },
                 onRatesRefresh = {
                     vm.sendEvent(HomeUiEvent.RefreshRates)
                 },

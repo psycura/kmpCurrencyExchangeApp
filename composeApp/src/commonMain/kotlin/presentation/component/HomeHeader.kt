@@ -1,5 +1,6 @@
 package presentation.component
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,16 +15,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import domain.model.Currency
 import domain.model.CurrencyCode
@@ -43,8 +50,10 @@ fun HomeHeader(
     status: RateStatus,
     source: RequestState<Currency>,
     target: RequestState<Currency>,
+    amount: Double,
     onRatesRefresh: () -> Unit,
-    onSwitchClick: () -> Unit
+    onSwitchClick: () -> Unit,
+    onAmountChange: (Double) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -64,6 +73,12 @@ fun HomeHeader(
             source = source,
             target = target,
             onSwitchClick = onSwitchClick
+        )
+        Spacer(modifier = Modifier.height(24.dp))
+
+        AmountInput(
+            amount = amount,
+            onAmountChange = onAmountChange
         )
     }
 }
@@ -196,5 +211,41 @@ fun RowScope.CurrencyView(
             }
         }
     }
+}
+
+@Composable
+fun AmountInput(
+    amount: Double,
+    onAmountChange: (Double) -> Unit
+) {
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .animateContentSize()
+            .height(45.dp),
+        value = "$amount",
+        onValueChange = { onAmountChange(it.toDouble()) },
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color.White.copy(alpha = 0.05f),
+            unfocusedContainerColor = Color.White.copy(alpha = 0.05f),
+            disabledContainerColor = Color.White.copy(alpha = 0.05f),
+            errorContainerColor = Color.White.copy(alpha = 0.05f),
+            focusedIndicatorColor = Color.White.copy(alpha = 0.05f),
+            disabledIndicatorColor = Color.White.copy(alpha = 0.05f),
+            unfocusedIndicatorColor = Color.White.copy(alpha = 0.05f),
+            cursorColor = Color.White.copy(alpha = 0.05f),
+        ),
+        textStyle = TextStyle(
+            color = Color.White,
+            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        ),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Decimal
+        )
+    )
 }
 
