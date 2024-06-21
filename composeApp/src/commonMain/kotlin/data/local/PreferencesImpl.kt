@@ -6,6 +6,9 @@ import com.russhwolf.settings.Settings
 import com.russhwolf.settings.coroutines.FlowSettings
 import com.russhwolf.settings.coroutines.toFlowSettings
 import domain.PreferencesRepository
+import domain.model.CurrencyCode
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -17,6 +20,10 @@ class PreferencesImpl(
 
     companion object {
         const val TIMESTAMP_KEY = "lastUpdated"
+        const val SOURCE_CODE_KEY = "sourceCode"
+        const val TARGET_CODE_KEY = "targetCode"
+        val DEFAULT_SOURCE_CODE = CurrencyCode.USD.name
+        val DEFAULT_TARGET_CODE = CurrencyCode.EUR.name
     }
 
     private val flowSettings: FlowSettings = (settings as ObservableSettings).toFlowSettings()
@@ -48,5 +55,23 @@ class PreferencesImpl(
             daysDiff < 1
 
         } else false
+    }
+
+    override suspend fun saveSourceCurrencyCode(code: String) {
+        flowSettings.putString(SOURCE_CODE_KEY, code)
+    }
+
+    override suspend fun saveTargetCurrencyCode(code: String) {
+        flowSettings.putString(TARGET_CODE_KEY, code)
+    }
+
+    override fun readSourceCurrencyCode(): Flow<CurrencyCode> {
+        return flowSettings.getStringFlow(SOURCE_CODE_KEY, defaultValue = DEFAULT_SOURCE_CODE)
+            .map { CurrencyCode.valueOf(it) }
+    }
+
+    override fun readTargetCurrencyCode(): Flow<CurrencyCode> {
+        return flowSettings.getStringFlow(TARGET_CODE_KEY, defaultValue = DEFAULT_TARGET_CODE)
+            .map { CurrencyCode.valueOf(it) }
     }
 }

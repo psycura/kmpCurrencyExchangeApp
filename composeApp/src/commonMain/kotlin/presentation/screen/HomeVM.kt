@@ -12,12 +12,14 @@ import domain.PreferencesRepository
 import domain.model.Currency
 import domain.model.RateStatus
 import domain.model.RequestState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 
 sealed class HomeUiEvent {
     data object RefreshRates : HomeUiEvent()
+    data object SwitchCurrencies : HomeUiEvent()
 }
 
 class HomeVM(
@@ -42,7 +44,8 @@ class HomeVM(
     init {
         screenModelScope.launch {
             fetchNewRates()
-            getRateStatus()
+            readSourceCurrency()
+            readTargetCurrency()
         }
     }
 
@@ -52,6 +55,44 @@ class HomeVM(
                 screenModelScope.launch {
                     fetchNewRates()
                 }
+            }
+
+            HomeUiEvent.SwitchCurrencies -> {
+                switchCurrencies()
+            }
+        }
+    }
+
+    private fun switchCurrencies() {
+        val source = _sourceCurrency.value
+        val target = _targetCurrency.value
+        _sourceCurrency.value = target
+        _targetCurrency.value = source
+    }
+
+    private fun readSourceCurrency() {
+        screenModelScope.launch(Dispatchers.Main) {
+            preferences.readSourceCurrencyCode().collect {currencyCode ->
+                val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
+                if (selectedCurrency != null) {
+                    _sourceCurrency.value = RequestState.Success(selectedCurrency)
+                } else {
+                    _sourceCurrency.value = RequestState.Error("Currency not found")
+                }
+            }
+        }
+    }
+
+    private fun readTargetCurrency() {
+        screenModelScope.launch(Dispatchers.Main) {
+            preferences.readTargetCurrencyCode().collect { currencyCode ->
+                val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
+                if (selectedCurrency != null) {
+                    _targetCurrency.value = RequestState.Success(selectedCurrency)
+                } else {
+                    _targetCurrency.value = RequestState.Error("Currency not found")
+                }
+
             }
         }
     }
@@ -73,7 +114,7 @@ class HomeVM(
                     println("HomeVM: DATABASE NEEDS DATA")
                     cacheData()
                 }
-            } else if(localCache.isError()){
+            } else if (localCache.isError()) {
                 println("HomeVM: ERROR READING LOCAL DATABASE ${localCache.getErrorMessage()}")
             }
 
