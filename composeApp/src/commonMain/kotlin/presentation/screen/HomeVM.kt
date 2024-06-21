@@ -103,7 +103,10 @@ class HomeVM(
             if (localCache.isSuccess()) {
                 if (localCache.getSuccessData().isNotEmpty()) {
                     println("HomeVM: DATABASE IS FULL")
-                    _allCurrencies.addAll(localCache.getSuccessData())
+                    val data = localCache.getSuccessData()
+                    println("HomeVM: DATA SIZE ${data.size}")
+
+                    _allCurrencies.addAll(data)
                     if (!preferences.isDataFresh(Clock.System.now().toEpochMilliseconds())) {
                         println("HomeVM: DATA IS NOT FRESH")
                         cacheData()
