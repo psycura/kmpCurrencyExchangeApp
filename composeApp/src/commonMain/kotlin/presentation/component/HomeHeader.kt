@@ -45,6 +45,7 @@ import domain.model.CurrencyType
 import domain.model.DisplayResult
 import domain.model.RateStatus
 import domain.model.RequestState
+import getPlatform
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 import testkmpapp.composeapp.generated.resources.Res
@@ -73,6 +74,7 @@ fun HomeHeader(
             .fillMaxWidth()
             .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp))
             .background(headerColor)
+            .padding(top = if (getPlatform().name == "Android") 0.dp else 24.dp)
             .padding(all = 24.dp)
     ) {
         Spacer(modifier = Modifier.height(24.dp))
@@ -164,12 +166,14 @@ fun CurrencyInputs(
             placeholder = "From",
             currency = source,
             onClick = {
-                if(source.isSuccess()) {
-                    onCurrencyTypeSelect(CurrencyType.Source(
-                        currencyCode = CurrencyCode.valueOf(
-                            source.getSuccessData().code
+                if (source.isSuccess()) {
+                    onCurrencyTypeSelect(
+                        CurrencyType.Source(
+                            currencyCode = CurrencyCode.valueOf(
+                                source.getSuccessData().code
+                            )
                         )
-                    ))
+                    )
                 }
             }
         )
@@ -198,12 +202,14 @@ fun CurrencyInputs(
             placeholder = "To",
             currency = target,
             onClick = {
-                if(target.isSuccess()) {
-                    onCurrencyTypeSelect(CurrencyType.Target(
-                        currencyCode = CurrencyCode.valueOf(
-                            target.getSuccessData().code
+                if (target.isSuccess()) {
+                    onCurrencyTypeSelect(
+                        CurrencyType.Target(
+                            currencyCode = CurrencyCode.valueOf(
+                                target.getSuccessData().code
+                            )
                         )
-                    ))
+                    )
                 }
             }
         )
@@ -238,7 +244,7 @@ fun RowScope.CurrencyView(
             horizontalArrangement = Arrangement.Center,
         ) {
             currency.DisplayResult(
-                onSuccess = {data ->
+                onSuccess = { data ->
                     Icon(
                         modifier = Modifier.size(24.dp),
                         painter = painterResource(
