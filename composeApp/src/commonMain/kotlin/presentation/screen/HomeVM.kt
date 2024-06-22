@@ -13,6 +13,8 @@ import domain.model.Currency
 import domain.model.RateStatus
 import domain.model.RequestState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
@@ -20,6 +22,8 @@ import kotlinx.datetime.Clock
 sealed class HomeUiEvent {
     data object RefreshRates : HomeUiEvent()
     data object SwitchCurrencies : HomeUiEvent()
+    data class SaveSourceCurrencyCode(val code: String) : HomeUiEvent()
+    data class SaveTargetCurrencyCode(val code: String) : HomeUiEvent()
 }
 
 class HomeVM(
@@ -57,9 +61,23 @@ class HomeVM(
                 }
             }
 
-            HomeUiEvent.SwitchCurrencies -> {
-                switchCurrencies()
-            }
+            HomeUiEvent.SwitchCurrencies -> { switchCurrencies() }
+
+            is HomeUiEvent.SaveSourceCurrencyCode -> { saveSourceCurrencyCode(event.code) }
+
+            is HomeUiEvent.SaveTargetCurrencyCode -> { saveTargetCurrencyCode(event.code) }
+        }
+    }
+
+    private fun saveSourceCurrencyCode(code: String) {
+        screenModelScope.launch(Dispatchers.IO) {
+            preferences.saveSourceCurrencyCode(code)
+        }
+    }
+
+    private fun saveTargetCurrencyCode(code: String) {
+        screenModelScope.launch(Dispatchers.IO) {
+            preferences.saveTargetCurrencyCode(code)
         }
     }
 
@@ -72,7 +90,7 @@ class HomeVM(
 
     private fun readSourceCurrency() {
         screenModelScope.launch(Dispatchers.Main) {
-            preferences.readSourceCurrencyCode().collect {currencyCode ->
+            preferences.readSourceCurrencyCode().collectLatest { currencyCode ->
                 val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
                 if (selectedCurrency != null) {
                     _sourceCurrency.value = RequestState.Success(selectedCurrency)
@@ -85,7 +103,7 @@ class HomeVM(
 
     private fun readTargetCurrency() {
         screenModelScope.launch(Dispatchers.Main) {
-            preferences.readTargetCurrencyCode().collect { currencyCode ->
+            preferences.readTargetCurrencyCode().collectLatest { currencyCode ->
                 val selectedCurrency = _allCurrencies.find { it.code == currencyCode.name }
                 if (selectedCurrency != null) {
                     _targetCurrency.value = RequestState.Success(selectedCurrency)
@@ -105,7 +123,7 @@ class HomeVM(
                     println("HomeVM: DATABASE IS FULL")
                     val data = localCache.getSuccessData()
                     println("HomeVM: DATA SIZE ${data.size}")
-
+                    _allCurrencies.clear()
                     _allCurrencies.addAll(data)
                     if (!preferences.isDataFresh(Clock.System.now().toEpochMilliseconds())) {
                         println("HomeVM: DATA IS NOT FRESH")
@@ -137,6 +155,7 @@ class HomeVM(
             }
 
             println("HomeVM: UPDATING _allCurrencies")
+            _allCurrencies.clear()
             _allCurrencies.addAll(fetchedData.getSuccessData())
         } else if (fetchedData.isError()) {
             println("HomeVM: FETCHING FAILED ${fetchedData.getErrorMessage()}")

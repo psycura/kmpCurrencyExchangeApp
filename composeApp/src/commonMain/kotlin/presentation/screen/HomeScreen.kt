@@ -14,6 +14,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.koinScreenModel
 import domain.model.CurrencyType
 import presentation.component.CurrencyPickerDialog
+import presentation.component.HomeBody
 import presentation.component.HomeHeader
 import ui.theme.surfaceColor
 
@@ -39,14 +40,27 @@ class HomeScreen : Screen {
         println("HomeVM:allCurrencies at Home Screen ${allCurrencies.size} ")
 
 
-        if (dialogIsOpened) {
+        if (dialogIsOpened && selectedCurrencyType != CurrencyType.None) {
             CurrencyPickerDialog(
                 currencies = allCurrencies,
                 currencyType = selectedCurrencyType,
-                onPositiveClick = {
+                onConfirmClick = { currencyCode ->
+                    if (selectedCurrencyType is CurrencyType.Source) {
+                        vm.sendEvent(
+                            HomeUiEvent.SaveSourceCurrencyCode(currencyCode.name)
+                        )
+                    } else if (selectedCurrencyType is CurrencyType.Target) {
+                        vm.sendEvent(
+                            HomeUiEvent.SaveTargetCurrencyCode(currencyCode.name)
+                        )
+                    }
+                    selectedCurrencyType = CurrencyType.None
                     dialogIsOpened = false
                 },
-                onDismiss = { dialogIsOpened = false }
+                onDismiss = {
+                    selectedCurrencyType = CurrencyType.None
+                    dialogIsOpened = false
+                }
             )
         }
 
@@ -61,12 +75,17 @@ class HomeScreen : Screen {
                 target = target,
                 amount = amount,
                 onAmountChange = { amount = it },
-                onRatesRefresh = {
-                    vm.sendEvent(HomeUiEvent.RefreshRates)
-                },
-                onSwitchClick = {
-                    vm.sendEvent(HomeUiEvent.SwitchCurrencies)
+                onRatesRefresh = { vm.sendEvent(HomeUiEvent.RefreshRates) },
+                onSwitchClick = { vm.sendEvent(HomeUiEvent.SwitchCurrencies) },
+                onCurrencyTypeSelect = { currencyType ->
+                    selectedCurrencyType = currencyType
+                    dialogIsOpened = true
                 }
+            )
+            HomeBody(
+                source = source,
+                target = target,
+                amount = amount
             )
         }
     }

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import domain.model.Currency
 import domain.model.CurrencyCode
+import domain.model.CurrencyType
 import domain.model.DisplayResult
 import domain.model.RateStatus
 import domain.model.RequestState
@@ -63,7 +64,9 @@ fun HomeHeader(
     amount: Double,
     onRatesRefresh: () -> Unit,
     onSwitchClick: () -> Unit,
-    onAmountChange: (Double) -> Unit
+    onAmountChange: (Double) -> Unit,
+    onCurrencyTypeSelect: (CurrencyType) -> Unit
+
 ) {
     Column(
         modifier = Modifier
@@ -82,7 +85,8 @@ fun HomeHeader(
         CurrencyInputs(
             source = source,
             target = target,
-            onSwitchClick = onSwitchClick
+            onSwitchClick = onSwitchClick,
+            onCurrencyTypeSelect = onCurrencyTypeSelect
         )
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -141,7 +145,8 @@ fun RateStatus(
 fun CurrencyInputs(
     source: RequestState<Currency>,
     target: RequestState<Currency>,
-    onSwitchClick: () -> Unit
+    onSwitchClick: () -> Unit,
+    onCurrencyTypeSelect: (CurrencyType) -> Unit
 ) {
 
     var animationStared by remember { mutableStateOf(false) }
@@ -158,7 +163,15 @@ fun CurrencyInputs(
         CurrencyView(
             placeholder = "From",
             currency = source,
-            onClick = {}
+            onClick = {
+                if(source.isSuccess()) {
+                    onCurrencyTypeSelect(CurrencyType.Source(
+                        currencyCode = CurrencyCode.valueOf(
+                            source.getSuccessData().code
+                        )
+                    ))
+                }
+            }
         )
         Spacer(modifier = Modifier.width(14.dp))
 
@@ -184,7 +197,15 @@ fun CurrencyInputs(
         CurrencyView(
             placeholder = "To",
             currency = target,
-            onClick = {}
+            onClick = {
+                if(target.isSuccess()) {
+                    onCurrencyTypeSelect(CurrencyType.Target(
+                        currencyCode = CurrencyCode.valueOf(
+                            target.getSuccessData().code
+                        )
+                    ))
+                }
+            }
         )
 
     }
